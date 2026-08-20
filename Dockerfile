@@ -1,28 +1,11 @@
 # SGLang + DFlash2 overlay on lmsysorg/sglang:latest (0.5.17 has no DFlash2DraftModel).
 # Verified stack: sglang 0.0.0.dev16855+g5f1283959, torch 2.13.0+cu130,
 # sglang-kernel 0.4.6.post1+cu130, flashinfer 0.6.17.
-#
-# Optional build proxy:
-#   docker build --network=host \
-#     --build-arg HTTP_PROXY=http://127.0.0.1:20172 \
-#     --build-arg HTTPS_PROXY=http://127.0.0.1:20172 \
-#     -t sglang-dflash2:latest .
 
 ARG BASE_IMAGE=lmsysorg/sglang:latest
 FROM ${BASE_IMAGE}
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG ALL_PROXY
-ARG NO_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG all_proxy
-ARG no_proxy
 ARG SGLANG_COMMIT=5f1283959
-
-# ALL_PROXY=socks5://... 时 httpx 需要 SOCKS 支持
-RUN pip install --no-cache-dir "httpx[socks]" socksio
 
 WORKDIR /sgl-workspace/sglang
 RUN git fetch origin main \
@@ -75,13 +58,3 @@ assert tv.startswith('2.13'), tv; \
 assert kv.startswith('0.4.6'), kv; \
 assert 'class DFlash2DraftModel' in Path('/sgl-workspace/sglang/python/sglang/srt/models/dflash.py').read_text(); \
 print('torch', tv, 'kernel', kv, 'DFlash2 source ok')"
-
-# 清除构建期代理，避免镜像内写死本机地址
-ENV HTTP_PROXY= \
-    HTTPS_PROXY= \
-    ALL_PROXY= \
-    NO_PROXY= \
-    http_proxy= \
-    https_proxy= \
-    all_proxy= \
-    no_proxy=

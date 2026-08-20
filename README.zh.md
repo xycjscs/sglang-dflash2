@@ -2,8 +2,6 @@
 
 在 `lmsysorg/sglang:latest`（0.5.17，**没有** `DFlash2DraftModel`）上叠加 CUDA 13 运行栈，用于 **Qwen3.8-27B FP8 + DFlash2**。
 
-不含 Cloudflare。HTTP API 通过 `-p` 映射到本机。
-
 [English](README.md)
 
 ## 已验证版本
@@ -22,19 +20,8 @@
 
 ## 构建
 
-构建期会从 GitHub Releases 拉取约 1.5GB 的 wheel。
-
 ```bash
 docker build -t sglang-dflash2:latest .
-```
-
-代理：
-
-```bash
-docker build --network=host \
-  --build-arg HTTP_PROXY=http://127.0.0.1:20172 \
-  --build-arg HTTPS_PROXY=http://127.0.0.1:20172 \
-  -t sglang-dflash2:latest .
 ```
 
 ## 运行
@@ -47,10 +34,6 @@ docker build --network=host \
 ```bash
 export MODEL_DIR=/path/to/qwen38-27-fp8
 export DFLASH_MODEL_DIR=/path/to/Qwen3.8-27B-DFlash2
-# 可选
-export API_KEY=your-key
-export GPUS=all          # 或 '"device=0,1"'
-export PORT=30000
 export TP=2
 
 ./start.sh
@@ -60,19 +43,20 @@ export TP=2
 curl http://127.0.0.1:30000/v1/models
 ```
 
+可选：`API_KEY`、`GPUS`（默认 `all`）、`PORT`（默认 `30000`）。
+
 ## 启动参数（2×32GB）
 
-`--cuda-graph-max-bs-prefill` 必须和 `--chunked-prefill-size` 一致。`--mem-fraction-static` 不要超过 0.85。不要开 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`（和 TP=2 custom all-reduce IPC 冲突）。
+`--cuda-graph-max-bs-prefill` 必须和 `--chunked-prefill-size` 一致。`--mem-fraction-static` 不要超过 0.85。
 
 | 参数 | 值 | 原因 |
 | --- | --- | --- |
 | `--mem-fraction-static` | 0.85 | KV 约 259k token；再高真实请求会 OOM |
 | `--cuda-graph-max-bs-prefill` | 2048 | 4096 图太吃显存 |
 | `--chunked-prefill-size` | 2048 | 必须和图表对齐 |
+| `--speculative-algorithm` | `DFLASH` | DFlash2 |
 | `--speculative-num-draft-tokens` | 8 | 与 draft `block_size=8` 一致 |
 | `--mamba-radix-cache-strategy` | `extra_buffer` | Qwen3.5/3.8 hybrid GDN |
-| `--disable-fast-image-processor` | 开 | 大图 GPU 预处理会 OOM |
-| `--grammar-backend` | `none` | 不要发 `json_schema` |
 
 Mamba 会把并发压到约 3。
 
