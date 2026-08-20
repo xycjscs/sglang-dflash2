@@ -33,7 +33,7 @@ docker build -t sglang-dflash2:latest .
 
 ```bash
 export MODEL_DIR=/path/to/qwen38-27-fp8
-export DFLASH_MODEL_DIR=/path/to/Qwen3.8-27B-DFlash2
+export DFLASH_MODEL_DIR=/path/to/z-lab-Qwen3.8-27B-DFlash2
 export TP=2
 
 ./start.sh
@@ -44,6 +44,42 @@ curl http://127.0.0.1:30000/v1/models
 ```
 
 可选：`API_KEY`、`GPUS`（默认 `all`）、`PORT`（默认 `30000`）。
+
+## 实际性能（2× RTX 5090，TP=2）
+
+来自本镜像与 `start.sh` 参数的生产日志。大请求的 prefill 按整请求墙钟时间计算。
+
+### Prefill
+
+| | tok/s |
+| --- | --- |
+| 大请求（≥2k token，共 93 个）平均 | 4391 |
+| 中位数 | 3736 |
+| p10 / p90 | 2257 / 7331 |
+| token 加权 | 4583 |
+| 最长请求（108k token） | 3731（29 秒） |
+| 短轮次（<2k token，中位数） | 约 470（含调度间隔，属正常） |
+
+每个大请求的第一个 chunk 会被 Triton JIT 拖慢（日志里出现过 25.6 tok/s），随后恢复到 4k–5k tok/s。
+
+### Decode（DFlash2）
+
+| | |
+| --- | --- |
+| 平均 / 中位数 / p90 / 峰值 | 172 / 156 / 280 / 542 tok/s |
+| 平均接受长度 | 3.5 token / 步（8 个草稿） |
+| 接受率 | 约 0.40（p10 0.20 / p90 0.59） |
+
+随上下文长度几乎不衰减（GDN 线性注意力）：
+
+| 上下文 | tok/s |
+| --- | --- |
+| 0–20k | 182 |
+| 40–60k | 162 |
+| 120–140k | 201 |
+| 140–160k | 151 |
+
+偶发 100–150 tok/s 对应接受率 0.15–0.25（草稿命中率低时接近裸 decode）。
 
 ## 启动参数（2×32GB）
 

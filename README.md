@@ -45,6 +45,42 @@ curl http://127.0.0.1:30000/v1/models
 
 Optional: `API_KEY`, `GPUS` (default `all`), `PORT` (default `30000`).
 
+## Performance (2× RTX 5090, TP=2)
+
+Measured from production logs of this image and `start.sh` flags. Prefill for large requests uses whole-request wall time.
+
+### Prefill
+
+| | tok/s |
+| --- | --- |
+| Large requests (≥2k tokens, n=93), mean | 4391 |
+| Median | 3736 |
+| p10 / p90 | 2257 / 7331 |
+| Token-weighted | 4583 |
+| Longest request (108k tokens) | 3731 (29 s) |
+| Short turns (<2k tokens, median) | ~470 (includes scheduling gaps) |
+
+The first chunk of each large request is slowed by Triton JIT (one logged chunk at 25.6 tok/s). Later chunks return to 4k–5k tok/s.
+
+### Decode (DFlash2)
+
+| | |
+| --- | --- |
+| Mean / median / p90 / peak | 172 / 156 / 280 / 542 tok/s |
+| Mean accept length | 3.5 tokens / step (8 draft tokens) |
+| Accept rate | ~0.40 (p10 0.20 / p90 0.59) |
+
+Throughput barely drops with context length (hybrid GDN linear attention):
+
+| Context | tok/s |
+| --- | --- |
+| 0–20k | 182 |
+| 40–60k | 162 |
+| 120–140k | 201 |
+| 140–160k | 151 |
+
+Samples at 100–150 tok/s line up with accept rate 0.15–0.25 (draft misses, close to raw decode).
+
 ## Launch flags (2×32GB)
 
 Keep `--cuda-graph-max-bs-prefill` and `--chunked-prefill-size` equal. Do not raise `--mem-fraction-static` above 0.85.
