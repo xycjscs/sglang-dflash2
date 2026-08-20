@@ -29,7 +29,7 @@ docker build -t sglang-dflash2:latest .
 权重：
 
 - Target：`Qwen/Qwen3.8-27B` 的本地 FP8（`lm_head` 不要量化）
-- Draft：[`incoai/Qwen3.8-27B-DFlash2`](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2)（`block_size=8`）
+- Draft：[`z-lab/Qwen3.8-27B-DFlash2`](https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2)（`block_size=8`）
 
 ```bash
 export MODEL_DIR=/path/to/qwen38-27-fp8
@@ -66,6 +66,6 @@ Mamba 会把并发压到约 3。
 python -m sglang.launch_server \
   --model-path Qwen/Qwen3.8-27B \
   --speculative-algorithm DFLASH \
-  --speculative-draft-model-path incoai/Qwen3.8-27B-DFlash2 \
+  --speculative-draft-model-path z-lab/Qwen3.8-27B-DFlash2 \
   --speculative-num-draft-tokens 8
 ```

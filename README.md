@@ -29,11 +29,11 @@ docker build -t sglang-dflash2:latest .
 Weights:
 
 - Target: local FP8 of `Qwen/Qwen3.8-27B` (`lm_head` not quantized)
-- Draft: [`incoai/Qwen3.8-27B-DFlash2`](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2) (`block_size=8`)
+- Draft: [`z-lab/Qwen3.8-27B-DFlash2`](https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2) (`block_size=8`)
 
 ```bash
 export MODEL_DIR=/path/to/qwen38-27-fp8
-export DFLASH_MODEL_DIR=/path/to/Qwen3.8-27B-DFlash2
+export DFLASH_MODEL_DIR=/path/to/z-lab-Qwen3.8-27B-DFlash2
 export TP=2
 
 ./start.sh
@@ -66,6 +66,6 @@ Mamba caps concurrency to about 3.
 python -m sglang.launch_server \
   --model-path Qwen/Qwen3.8-27B \
   --speculative-algorithm DFLASH \
-  --speculative-draft-model-path incoai/Qwen3.8-27B-DFlash2 \
+  --speculative-draft-model-path z-lab/Qwen3.8-27B-DFlash2 \
   --speculative-num-draft-tokens 8
 ```

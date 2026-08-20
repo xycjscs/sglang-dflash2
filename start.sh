@@ -2,7 +2,7 @@
 set -euo pipefail
 
 : "${MODEL_DIR:?set MODEL_DIR to the Qwen3.8-27B FP8 weights}"
-: "${DFLASH_MODEL_DIR:?set DFLASH_MODEL_DIR to the DFlash2 draft weights}"
+: "${DFLASH_MODEL_DIR:?set DFLASH_MODEL_DIR to z-lab/Qwen3.8-27B-DFlash2 weights}"
 
 IMAGE="${IMAGE:-sglang-dflash2:latest}"
 PORT="${PORT:-30000}"
